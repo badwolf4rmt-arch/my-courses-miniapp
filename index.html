@@ -724,25 +724,51 @@
             try {
                 console.log('Загружаем курсы пользователя...');
                 
-                const { data, error } = await supabase
+                // Сначала загружаем только курсы
+                const { data: coursesData, error: coursesError } = await supabase
                     .from('courses')
-                    .select(`
-                        *,
-                        lessons (id, title, lesson_number),
-                        lesson_progress (stars_earned, completed)
-                    `)
+                    .select('*')
                     .eq('user_id', currentUser.id)
                     .eq('status', 'active')
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (coursesError) {
+                    console.error('Ошибка загрузки курсов:', coursesError);
+                    throw coursesError;
+                }
                 
-                courses = data || [];
-                console.log('Курсы загружены:', courses);
+                console.log('Курсы загружены:', coursesData);
+                
+                // Для каждого курса загружаем уроки отдельно
+                if (coursesData) {
+                    for (let course of coursesData) {
+                        // Загружаем уроки
+                        const { data: lessons } = await supabase
+                            .from('lessons')
+                            .select('id, title, lesson_number')
+                            .eq('course_id', course.id)
+                            .order('lesson_number');
+                        
+                        course.lessons = lessons || [];
+                        
+                        // Загружаем прогресс
+                        const { data: progress } = await supabase
+                            .from('lesson_progress')
+                            .select('stars_earned, completed')
+                            .eq('user_id', currentUser.id)
+                            .in('lesson_id', (lessons || []).map(l => l.id));
+                        
+                        course.lesson_progress = progress || [];
+                    }
+                }
+                
+                courses = coursesData || [];
+                console.log('Курсы с данными:', courses);
                 renderCourses();
                 
             } catch (error) {
                 console.error('Ошибка загрузки курсов:', error);
+                console.error('Error details:', error.message);
                 showToast('Ошибка загрузки курсов: ' + error.message, 'error');
                 showEmptyCourses();
             }
@@ -760,7 +786,7 @@
             let coursesHTML = '';
             courses.forEach(course => {
                 const completedLessons = course.lesson_progress?.filter(p => p.completed).length || 0;
-                const totalLessons = course.lessons?.length || course.lessons_count;
+                const totalLessons = course.lessons?.length || course.lessons_count || 0;
                 const progress = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
                 const totalStars = course.lesson_progress?.reduce((sum, p) => sum + (p.stars_earned || 0), 0) || 0;
                 
@@ -772,11 +798,11 @@
                 };
                 
                 coursesHTML += `
-                    <div class="course-card" onclick="openCourse('${course.id}')">
+                    <div class="course-card" onclick="showCourseInfo('${course.id}')">
                         <div class="course-header">
                             <div>
-                                <div class="course-title">${course.title}</div>
-                                <div class="course-description">${course.description || ''}</div>
+                                <div class="course-title">${course.title || 'Новый курс'}</div>
+                                <div class="course-description">${course.description || 'Описание курса'}</div>
                             </div>
                             <div class="course-emoji">${themeEmojis[course.theme] || '📚'}</div>
                         </div>
@@ -786,7 +812,7 @@
                                 <span>⭐ ${totalStars}</span>
                             </div>
                             <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${progress}%"></div>
+                                <div class="progress-fill" style="width: ${Math.min(progress, 100)}%"></div>
                             </div>
                         </div>
                     </div>
@@ -794,6 +820,14 @@
             });
             
             coursesList.innerHTML = coursesHTML;
+        }
+
+        // Пока что просто показываем информацию о курсе
+        function showCourseInfo(courseId) {
+            const course = courses.find(c => c.id === courseId);
+            if (course) {
+                showToast(`Курс: ${course.title}. Уроков: ${course.lessons?.length || 0}`, 'info');
+            }
         }
 
         function showEmptyCourses() {
