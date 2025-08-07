@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мои Курсы</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.4/umd/supabase.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -583,8 +583,28 @@
         const SUPABASE_URL = 'https://yzryjwwcbhoxvnjlbybt.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6cnlqd3djYmhveHZuamxieWJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ1OTE4ODYsImV4cCI6MjA3MDE2Nzg4Nn0.AxVR3AqfoAB0WK3mvdmX02dZ45WYNZnT6z-pQElugng';
         
-        // Инициализируем Supabase
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        // Ждем загрузки Supabase
+        let supabase = null;
+        
+        function initSupabase() {
+            try {
+                console.log('Проверяем загрузку Supabase...');
+                console.log('window.supabase:', window.supabase);
+                console.log('window.supabase.createClient:', typeof window.supabase?.createClient);
+                
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('Supabase клиент создан успешно!');
+                    return true;
+                } else {
+                    console.error('Supabase library не загружена или createClient не найден');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Ошибка создания Supabase клиента:', error);
+                return false;
+            }
+        }
         
         // Инициализируем Telegram
         const tg = window.Telegram?.WebApp;
@@ -601,11 +621,27 @@
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         async function init() {
             try {
+                console.log('Инициализация приложения...');
                 initTheme();
                 
-                if (!supabase) {
+                // Ждем загрузки Supabase
+                const supabaseReady = initSupabase();
+                
+                if (!supabaseReady) {
                     console.error('Supabase не инициализирован! Проверьте URL и ключ.');
-                    showToast('Ошибка подключения к базе данных', 'error');
+                    showToast('Ошибка подключения к базе данных. Работаем в демо-режиме.', 'error');
+                    
+                    // Работаем в демо-режиме
+                    currentUser = {
+                        id: 'demo-user',
+                        telegram_id: 12345,
+                        first_name: 'Демо',
+                        username: 'demo',
+                        total_points: 125,
+                        daily_streak: 7
+                    };
+                    showEmptyCourses();
+                    updateUI();
                     return;
                 }
                 
