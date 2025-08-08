@@ -458,6 +458,196 @@
             margin-right: 8px;
         }
         
+        .lesson-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-gradient);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .lesson-screen.show {
+            display: flex;
+        }
+        
+        .lesson-header {
+            padding: 20px;
+            text-align: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--card-border);
+            position: relative;
+        }
+        
+        .lesson-back-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lesson-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .lesson-subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        .slides-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slide {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 20px 60px var(--shadow-color);
+            min-height: 400px;
+        }
+        
+        .slide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        
+        .slide-counter {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .slide-type {
+            font-size: 24px;
+        }
+        
+        .slide-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .quiz-question {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        
+        .quiz-option {
+            padding: 16px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-option:hover {
+            border-color: #4ecdc4;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-option.selected {
+            border-color: #4ecdc4;
+            background: linear-gradient(45deg, rgba(78,205,196,0.1), rgba(69,183,209,0.1));
+        }
+        
+        .quiz-option.correct {
+            border-color: #27ae60;
+            background: linear-gradient(45deg, rgba(39,174,96,0.1), rgba(46,204,113,0.1));
+            color: #27ae60;
+        }
+        
+        .quiz-option.incorrect {
+            border-color: #e74c3c;
+            background: linear-gradient(45deg, rgba(231,76,60,0.1), rgba(192,57,43,0.1));
+            color: #e74c3c;
+        }
+        
+        .quiz-explanation {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border-left: 4px solid #4ecdc4;
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .quiz-explanation.show {
+            opacity: 1;
+        }
+        
+        .lesson-navigation {
+            padding: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+        }
+        
+        .nav-btn {
+            flex: 1;
+            max-width: 200px;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--card-border);
+        }
+        
+        .nav-btn-primary {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -514,6 +704,35 @@
                 <h3>📊 Статистика</h3>
                 <p>Скоро здесь будет детальная статистика!</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Экран урока -->
+    <div class="lesson-screen" id="lessonScreen">
+        <div class="lesson-header">
+            <button class="lesson-back-btn" onclick="closeLessonScreen()">←</button>
+            <div>
+                <div class="lesson-title" id="lessonTitle">Урок</div>
+                <div class="lesson-subtitle" id="lessonSubtitle">Загрузка...</div>
+            </div>
+        </div>
+        
+        <div class="slides-container">
+            <div class="slide" id="currentSlide">
+                <div class="slide-header">
+                    <div class="slide-counter" id="slideCounter">1 / 1</div>
+                    <div class="slide-type" id="slideType">📖</div>
+                </div>
+                <div id="slideContent">
+                    <h2 class="slide-title">Загрузка урока...</h2>
+                    <div>Подождите, урок загружается...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="lesson-navigation">
+            <button class="nav-btn nav-btn-secondary" onclick="previousSlide()" id="prevBtn">← Назад</button>
+            <button class="nav-btn nav-btn-primary" onclick="nextSlide()" id="nextBtn">Далее →</button>
         </div>
     </div>
 
@@ -617,6 +836,9 @@
         let currentTheme = localStorage.getItem('theme') || 'dark';
         let currentUser = null;
         let courses = [];
+        let currentLessonData = null;
+        let currentSlideIndex = 0;
+        let quizAnswered = false;
 
         // ========== ИНИЦИАЛИЗАЦИЯ ==========
         async function init() {
@@ -798,7 +1020,7 @@
                 };
                 
                 coursesHTML += `
-                    <div class="course-card" onclick="showCourseInfo('${course.id}')">
+                    <div class="course-card" onclick="openCourse('${course.id}')">
                         <div class="course-header">
                             <div>
                                 <div class="course-title">${course.title || 'Новый курс'}</div>
